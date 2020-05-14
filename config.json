@@ -1,0 +1,11 @@
+{
+	"Serial": {
+		"Port": "COM14",
+		"Baudrate": 115200
+	},
+	"UDP": {
+		"Listen": 1940,
+		"SendToIP": "127.0.0.1",
+		"SendToPort": 1941
+	}
+}
