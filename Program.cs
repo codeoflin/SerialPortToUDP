@@ -12,6 +12,7 @@ namespace SerialPortToUDP
 	{
 		static int Main(string[] args)
 		{
+			string remoteip = null;
 			#region 参数判断
 			if (args == null)
 			{
@@ -58,11 +59,13 @@ namespace SerialPortToUDP
 			{
 				while (running)
 				{
-					var buff = (await udp.ReceiveAsync()).Buffer;
+					var udprecv = (await udp.ReceiveAsync());
+					var buff = udprecv.Buffer;
+					if (config.UDP.SendToIP.ToUpper() == "AUTO") remoteip = udprecv.RemoteEndPoint.Address.ToString();
 					serial.Write(buff, 0, buff.Length);
 				}
 			});
-			Task.Factory.StartNew(async () =>
+			Task.Factory.StartNew(() =>
 						{
 							var listbuff = new List<byte>();
 							while (running)
@@ -77,7 +80,11 @@ namespace SerialPortToUDP
 									listbuff.AddRange(buff);
 									Thread.Sleep(50);
 								}
-								if (listbuff.Count > 0) udp.Send(listbuff.ToArray(), listbuff.Count, config.UDP.SendToIP, config.UDP.SendToPort);
+								if (listbuff.Count > 0)
+								{
+									if (config.UDP.SendToIP.ToUpper() != "AUTO") udp.Send(listbuff.ToArray(), listbuff.Count, config.UDP.SendToIP, config.UDP.SendToPort);
+									if (!string.IsNullOrWhiteSpace(remoteip)) udp.Send(listbuff.ToArray(), listbuff.Count, remoteip, config.UDP.SendToPort);
+								}
 							}
 						});
 			//Console.ReadKey();
